@@ -176,9 +176,8 @@ public class AWSConfigDialog extends javax.swing.JDialog {
     }
 
     public void updateConfig(Configuration config) {
-        config.clear();
         for (int index = 0; index < tblConfig.getRowCount(); index++) {
-            config.addProperty(tblConfig.getValueAt(index, 0).toString(), tblConfig.getValueAt(index, 1).toString());
+            config.setProperty(tblConfig.getValueAt(index, 0).toString(), tblConfig.getValueAt(index, 1).toString());
         }
     }
 

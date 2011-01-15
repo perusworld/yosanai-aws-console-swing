@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.yosanai.java.aws</groupId>
-	<artifactId>yosanai-aws-console</artifactId>
+	<artifactId>yosanai-aws-console-swing</artifactId>
 	<version>1.0</version>
 	<name>Yosanai AWS Console</name>
 	<description>Yosanai AWS Console</description>
@@ -24,11 +24,9 @@
 			</roles>
 		</developer>
 	</developers>
-	<contributors>
-	</contributors>
 	<scm>
 		<developerConnection>Saravana Perumal Shanmugam</developerConnection>
-		<url>https://perusworld@github.com/perusworld/simple-rest-app.git</url>
+		<url>https://perusworld@github.com/perusworld/yosanai-aws-console-swing.git</url>
 	</scm>
 	<organization>
 		<name>Yosanai</name>
@@ -52,6 +50,21 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>com.yosanai.java.aws.console.AWSConsole</mainClass>
+						</manifest>
+					</archive>
+					<outputDirectory>binary/</outputDirectory>
 				</configuration>
 			</plugin>
 		</plugins>

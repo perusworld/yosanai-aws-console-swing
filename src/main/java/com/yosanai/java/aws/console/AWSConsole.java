@@ -33,7 +33,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.plist.PropertyListConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -50,7 +50,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     /**
      * 
      */
-    private static final String CONFIG_PROPERTIES = ".yosanai-aws-config.properties";
+    private static final String CONFIG_PROPERTIES = ".yosanai-aws-config";
 
     /**
      * 
@@ -64,7 +64,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
 
     protected MainAWSPanel console;
 
-    protected PropertyListConfiguration config;
+    protected XMLConfiguration config;
 
     protected AmazonEC2 amazonEC2;
 
@@ -95,7 +95,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
      */
     protected void loadConfig() {
         try {
-            config = new PropertyListConfiguration(CONFIG_PROPERTIES);
+            config = new XMLConfiguration(CONFIG_PROPERTIES);
         } catch (ConfigurationException ex) {
             try {
                 String defaultPath = System.getProperty("user.home") + "/" + CONFIG_PROPERTIES;
@@ -104,7 +104,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
                 String entries = IOUtils.toString(ins);
                 IOUtils.closeQuietly(ins);
                 if (StringUtils.isBlank(entries)) {
-                    config = new PropertyListConfiguration();
+                    config = new XMLConfiguration();
                     config.setFileName(defaultPath);
                     try {
                         config.save();
@@ -116,7 +116,9 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
                 Logger.getLogger(AWSConsole.class.getName()).log(Level.SEVERE, null, ioEx);
             }
         }
-        config.setAutoSave(true);
+        if (null != config) {
+            config.setAutoSave(true);
+        }
     }
 
     /**
@@ -230,8 +232,8 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
                         amazonEC2 = null;
                     }
                     try {
-                        amazonEC2 = new AmazonEC2Client(new BasicAWSCredentials(config.getString(AWS_KEY),
-                                config.getString(AWS_SECRET)));
+                        amazonEC2 = new AmazonEC2Client(new BasicAWSCredentials(config.getString(AWS_KEY, ""),
+                                config.getString(AWS_SECRET, "")));
                         amazonEC2.describeInstances();
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(this, "" + e.getLocalizedMessage(),
