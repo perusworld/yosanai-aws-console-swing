@@ -2,5 +2,10 @@ Yosanai - Amazon Web Services Swing Console
 
 A Java Swing based AWS Console
 
+How do you run it ?
+~~~~~~~~~~~~~~~~~~~
+You can run it in two ways.
+ 1. You can checkout the entire source code and 
+
 NOTE: Right now the AWS Key and Secret Key asked during config is store in a plain text file at {USER_HOME}/.yosanai-aws-config.properties
 
