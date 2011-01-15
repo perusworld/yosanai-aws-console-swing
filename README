@@ -8,9 +8,9 @@ You can run it in two ways.
  1. You can checkout the entire source code and run this command from the checked out root directory
     mvn clean install exec:java
     (NOTE: You need to have JDK and MAVEN installed in order to use this)
- 2. You can just download the binary /binary/yosanai-aws-console-swing-1.0-jar-with-dependencies.jar and run this command from the checked out root directory
+ 2. You can just download the binary https://github.com/perusworld/yosanai-aws-console-swing/blob/master/binary/yosanai-aws-console-swing-1.0-jar-with-dependencies.jar and run this command from the checked out root directory
     java -jar yosanai-aws-console-swing-1.0-jar-with-dependencies.jar
     (NOTE: you need to have atleast JRE installed in order to use this)
 
-NOTE: Right now the AWS Key and Secret Key asked during config is store in a plain text file at {USER_HOME}/.yosanai-aws-config.properties
+NOTE: Right now the AWS Key and Secret Key asked during config is store in a plain text file at {USER_HOME}/.yosanai-aws-config
 
