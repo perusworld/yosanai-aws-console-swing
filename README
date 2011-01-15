@@ -1,3 +1,5 @@
 Yosanai - Amazon Web Services Swing Console
 
 A Java Swing based AWS Console
+
+NOTE: Right now the AWS Key and Secret Key asked during config is store in a plain text file at {USER_HOME}/
