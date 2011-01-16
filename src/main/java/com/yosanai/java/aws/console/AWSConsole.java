@@ -23,9 +23,6 @@
 package com.yosanai.java.aws.console;
 
 import java.awt.BorderLayout;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,12 +31,12 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.yosanai.java.swing.config.ConfigDialog;
 
 /**
  * 
@@ -73,7 +70,6 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     /** Creates new form AWSConsole */
     public AWSConsole() {
         initComponents();
-        loadConfig();
     }
 
     /*
@@ -88,37 +84,6 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
             ret = amazonEC2;
         }
         return ret;
-    }
-
-    /**
-     * 
-     */
-    protected void loadConfig() {
-        try {
-            config = new XMLConfiguration(CONFIG_PROPERTIES);
-        } catch (ConfigurationException ex) {
-            try {
-                String defaultPath = System.getProperty("user.home") + "/" + CONFIG_PROPERTIES;
-                new File(defaultPath).createNewFile();
-                FileInputStream ins = new FileInputStream(defaultPath);
-                String entries = IOUtils.toString(ins);
-                IOUtils.closeQuietly(ins);
-                if (StringUtils.isBlank(entries)) {
-                    config = new XMLConfiguration();
-                    config.setFileName(defaultPath);
-                    try {
-                        config.save();
-                    } catch (ConfigurationException cfEx) {
-                        Logger.getLogger(AWSConsole.class.getName()).log(Level.SEVERE, null, cfEx);
-                    }
-                }
-            } catch (IOException ioEx) {
-                Logger.getLogger(AWSConsole.class.getName()).log(Level.SEVERE, null, ioEx);
-            }
-        }
-        if (null != config) {
-            config.setAutoSave(true);
-        }
     }
 
     /**
@@ -182,15 +147,22 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    protected void showConfig() {
-        AWSConfigDialog dialog = new AWSConfigDialog(this, true);
-        dialog.load(config, AWS_KEY, AWS_SECRET);
-        dialog.setVisible(true);
-        if (AWSConfigDialog.RET_OK == dialog.getReturnStatus()) {
-            dialog.updateConfig(config);
+    protected void showConfig(boolean force) {
+        ConfigDialog dialog = new ConfigDialog(this, true);
+        dialog.setFile(CONFIG_PROPERTIES);
+        dialog.init(AWS_KEY, AWS_SECRET);
+        boolean updated = false;
+        if (!force && StringUtils.isNotBlank(dialog.getConfiguration().getString(AWS_KEY))) {
+            updated = true;
+        } else {
+            dialog.setVisible(true);
+            updated = (ConfigDialog.RET_OK == dialog.getReturnStatus());
+        }
+        if (updated) {
+            config = dialog.getConfiguration();
             try {
                 config.save();
-                updatedEC2Config(false);
+                updateEC2Config(false);
             } catch (ConfigurationException ex) {
                 Logger.getLogger(AWSConsole.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -198,7 +170,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     }
 
     private void btnConfigActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnConfigActionPerformed
-        showConfig();
+        showConfig(true);
     }// GEN-LAST:event_btnConfigActionPerformed
 
     private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnExitActionPerformed
@@ -206,10 +178,13 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     }// GEN-LAST:event_btnExitActionPerformed
 
     private void btnAccessActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnAccessActionPerformed
-        if (StringUtils.isBlank(config.getString(AWS_KEY))) {
-            showConfig();
+        if (null == config) {
+            showConfig(false);
         }
-        updatedEC2Config(true);
+        if (StringUtils.isBlank(config.getString(AWS_KEY))) {
+            showConfig(true);
+        }
+        updateEC2Config(true);
         if (null == console && null != amazonEC2) {
             console = new MainAWSPanel();
             console.setAwsConnectionProvider(this);
@@ -223,7 +198,7 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     /**
      * 
      */
-    protected void updatedEC2Config(boolean reuseExisting) {
+    protected void updateEC2Config(boolean reuseExisting) {
         if (StringUtils.isNotBlank(config.getString(AWS_KEY))) {
             if (null == amazonEC2 || !reuseExisting) {
                 synchronized (lock) {

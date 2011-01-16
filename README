@@ -12,5 +12,3 @@ You can run it in two ways.
     java -jar yosanai-aws-console-swing-1.0-jar-with-dependencies.jar
     (NOTE: you need to have atleast JRE installed in order to use this)
 
-NOTE: Right now the AWS Key and Secret Key asked during config is store in a plain text file at {USER_HOME}/.yosanai-aws-config
-

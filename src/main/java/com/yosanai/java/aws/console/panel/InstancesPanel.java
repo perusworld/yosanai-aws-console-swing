@@ -153,7 +153,7 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnRefreshActionPerformed
-        // TODO add your handling code here:
+        loadInstances();
     }// GEN-LAST:event_btnRefreshActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
