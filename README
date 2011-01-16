@@ -8,10 +8,15 @@ You can run it in two ways.
  1. You can checkout the entire source code and run this command from the checked out root directory
     mvn clean install exec:java
     (NOTE: You need to have JDK and MAVEN installed in order to use this)
- 2. You can just download the binary https://github.com/perusworld/yosanai-aws-console-swing/blob/master/binary/yosanai-aws-console-swing-1.0-jar-with-dependencies.jar and run this command from the checked out root directory
-    java -jar yosanai-aws-console-swing-1.0-jar-with-dependencies.jar
+ 2. You can just download the binaries https://github.com/perusworld/yosanai-aws-console-swing/blob/master/binary/ and run this command from the checked out root directory
+    java -jar yosanai-aws-console-swing-1.0.jar
     (NOTE: you need to have atleast JRE installed in order to use this)
 
+Password
+~~~~~~~~
+The Yosanai - Amazon Web Services Swing Console stores the application configurations in a file with encrypted values. So when you launch the application for the first tiem it would ask you for a password based on which the configuration will encrypted and stored. You would need to provide this password every time you start application or modify the configurations.
+
+   NOTE: This uses http://www.bouncycastle.org/ encryption libraries and also requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files (http://www.oracle.com/technetwork/java/javase/downloads/index.html#other) to be installed 
 
 Using the Yosanai - Amazon Web Services Swing Console
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
