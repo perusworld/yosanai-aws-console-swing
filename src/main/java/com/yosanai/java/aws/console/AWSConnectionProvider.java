@@ -24,6 +24,8 @@
  */
 package com.yosanai.java.aws.console;
 
+import org.apache.commons.configuration.Configuration;
+
 import com.amazonaws.services.ec2.AmazonEC2;
 
 /**
@@ -31,5 +33,30 @@ import com.amazonaws.services.ec2.AmazonEC2;
  * 
  */
 public interface AWSConnectionProvider {
+    /**
+     * 
+     */
+    public static final String AWS_SECRET = "aws.secret";
+
+    /**
+     * 
+     */
+    public static final String AWS_KEY = "aws.key";
+
     public AmazonEC2 getConnection();
+
+    public void updateEC2Config(boolean reuseExisting, Configuration config) throws Exception;
+
+    public void startInstances(String... instanceIds) throws Exception;
+
+    public void stopInstances(String... instanceIds) throws Exception;
+
+    public void terminateInstances(String... instanceIds) throws Exception;
+
+    public void setApiTermination(boolean enable, String... instanceIds) throws Exception;
+
+    public boolean getApiTermination(String instanceId) throws Exception;
+
+    public String getInstanceDetails(String property, String separator, String... instanceIds) throws Exception;
+
 }

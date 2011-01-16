@@ -1,8 +1,6 @@
 /*
  * The MIT License
  *
- * Copyright 2011 peru.
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -22,14 +20,15 @@
  * THE SOFTWARE.
  */
 
-/*
- * InstancesPanel.java
- *
- * Created on Jan 15, 2011, 8:51:14 AM
- */
-
 package com.yosanai.java.aws.console.panel;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -41,7 +40,7 @@ import com.yosanai.java.aws.console.AWSConnectionProvider;
 
 /**
  * 
- * @author peru
+ * @author Saravana Perumal Shanmugam
  */
 public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
@@ -53,24 +52,41 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     }
 
     public void loadInstances() {
-        DefaultTableModel tableModel = (DefaultTableModel) tblInstances.getModel();
-        DescribeInstancesResult result = awsConnectionProvider.getConnection().describeInstances();
-        while (0 < tableModel.getRowCount()) {
-            tableModel.removeRow(0);
-        }
-        for (Reservation reservation : result.getReservations()) {
-            for (Instance instance : reservation.getInstances()) {
-                StringBuilder tags = new StringBuilder();
-                for (Tag tag : instance.getTags()) {
-                    tags.append(tag.getKey());
-                    tags.append("=");
-                    tags.append(tag.getValue());
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                tblInstances.clearSelection();
+                DefaultTableModel tableModel = (DefaultTableModel) tblInstances.getModel();
+                DescribeInstancesResult result = awsConnectionProvider.getConnection().describeInstances();
+                while (0 < tableModel.getRowCount()) {
+                    tableModel.removeRow(0);
                 }
-                tableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
-                        instance.getPrivateDnsName(), instance.getPublicIpAddress(), instance.getState().getName(),
-                        tags.toString() });
+                for (Reservation reservation : result.getReservations()) {
+                    for (Instance instance : reservation.getInstances()) {
+                        StringBuilder tags = new StringBuilder();
+                        for (Tag tag : instance.getTags()) {
+                            tags.append(tag.getKey());
+                            tags.append("=");
+                            tags.append(tag.getValue());
+                        }
+                        try {
+                            tableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
+                                    instance.getPrivateDnsName(), instance.getPublicIpAddress(),
+                                    "" + awsConnectionProvider.getApiTermination(instance.getInstanceId()),
+                                    instance.getState().getName(), instance.getInstanceType(), tags.toString() });
+                        } catch (Exception ex) {
+                            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
             }
-        }
+        }).start();
+    }
+
+    protected void setToClipBoard(String data) {
+        StringSelection clipData = new StringSelection(data);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(clipData, clipData);
     }
 
     /*
@@ -81,6 +97,12 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     @Override
     public void init() {
         loadInstances();
+    }
+
+    public void showPopup(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            tblPopup.show(e.getComponent(), e.getX(), e.getY());
+        }
     }
 
     /*
@@ -103,26 +125,120 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
     // desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        tblPopup = new javax.swing.JPopupMenu();
+        mnuStart = new javax.swing.JMenuItem();
+        mnuStop = new javax.swing.JMenuItem();
+        mnuTerminate = new javax.swing.JMenuItem();
+        mnuSepOne = new javax.swing.JPopupMenu.Separator();
+        mnuEnableApiTermination = new javax.swing.JMenuItem();
+        mnuDisableApiTermination = new javax.swing.JMenuItem();
+        mnuSepTwo = new javax.swing.JPopupMenu.Separator();
+        mnuCpyInstanceID = new javax.swing.JMenuItem();
+        mnuCpyPublicDNS = new javax.swing.JMenuItem();
+        mnuCpyPrivateDNS = new javax.swing.JMenuItem();
+        mnuCpyPrivateIP = new javax.swing.JMenuItem();
         pnlInstances = new javax.swing.JPanel();
         scrInstances = new javax.swing.JScrollPane();
         tblInstances = new javax.swing.JTable();
         ponlInstanceMain = new javax.swing.JPanel();
         btnRefresh = new javax.swing.JButton();
 
+        mnuStart.setText("Start");
+        mnuStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuStartActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuStart);
+
+        mnuStop.setText("Stop");
+        mnuStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuStopActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuStop);
+
+        mnuTerminate.setText("Terminate");
+        mnuTerminate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuTerminateActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuTerminate);
+        tblPopup.add(mnuSepOne);
+
+        mnuEnableApiTermination.setText("Enable API Termination");
+        mnuEnableApiTermination.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuEnableApiTerminationActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuEnableApiTermination);
+
+        mnuDisableApiTermination.setText("Disable API Termination");
+        mnuDisableApiTermination.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuDisableApiTerminationActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuDisableApiTermination);
+        tblPopup.add(mnuSepTwo);
+
+        mnuCpyInstanceID.setText("Copy Instance ID(s) to ClipBoard");
+        mnuCpyInstanceID.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCpyInstanceIDActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuCpyInstanceID);
+
+        mnuCpyPublicDNS.setText("Copy Public DNS(s) to ClipBoard");
+        mnuCpyPublicDNS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCpyPublicDNSActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuCpyPublicDNS);
+
+        mnuCpyPrivateDNS.setText("Copy Private DNS(s) to ClipBoard");
+        mnuCpyPrivateDNS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCpyPrivateDNSActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuCpyPrivateDNS);
+
+        mnuCpyPrivateIP.setText("Copy Private IP(s) to ClipBoard");
+        mnuCpyPrivateIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCpyPrivateIPActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuCpyPrivateIP);
+
         setLayout(new java.awt.BorderLayout());
 
         pnlInstances.setLayout(new java.awt.BorderLayout());
 
+        tblInstances.setAutoCreateRowSorter(true);
         tblInstances.setModel(new javax.swing.table.DefaultTableModel(new Object[][] {
 
-        }, new String[] { "Instance ID", "Public DNS", "Private DNS", "Private IP", "State", "Tag" }) {
+        }, new String[] { "Instance ID", "Public DNS", "Private DNS", "Private IP", "API Terminate(disabled)", "State",
+                "Type", "Tag" }) {
             Class[] types = new Class[] { java.lang.String.class, java.lang.String.class, java.lang.String.class,
-                    java.lang.String.class, java.lang.String.class, java.lang.String.class };
+                    java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class,
+                    java.lang.String.class };
 
-            boolean[] canEdit = new boolean[] { false, false, false, false, false, false };
+            boolean[] canEdit = new boolean[] { false, false, false, false, false, false, false, false };
 
             public Class getColumnClass(int columnIndex) {
                 return types[columnIndex];
@@ -132,7 +248,16 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
                 return canEdit[columnIndex];
             }
         });
-        tblInstances.setColumnSelectionAllowed(true);
+        tblInstances.getTableHeader().setReorderingAllowed(false);
+        tblInstances.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                tblInstancesMousePressed(evt);
+            }
+
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tblInstancesMouseReleased(evt);
+            }
+        });
         scrInstances.setViewportView(tblInstances);
 
         pnlInstances.add(scrInstances, java.awt.BorderLayout.CENTER);
@@ -152,12 +277,137 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         add(pnlInstances, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void mnuCpyInstanceIDActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyInstanceIDActionPerformed
+        try {
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("instanceId", ",", getSelectedInstances()));
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuCpyInstanceIDActionPerformed
+
+    private void mnuCpyPublicDNSActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPublicDNSActionPerformed
+        try {
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("publicDnsName", ",", getSelectedInstances()));
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuCpyPublicDNSActionPerformed
+
+    private void mnuCpyPrivateDNSActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPrivateDNSActionPerformed
+        try {
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("privateDnsName", ",", getSelectedInstances()));
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuCpyPrivateDNSActionPerformed
+
+    private void mnuCpyPrivateIPActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPrivateIPActionPerformed
+        try {
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("publicIpAddress", ",", getSelectedInstances()));
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuCpyPrivateIPActionPerformed
+
+    private void mnuEnableApiTerminationActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuEnableApiTerminationActionPerformed
+        try {
+            awsConnectionProvider.setApiTermination(true, getSelectedInstances());
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }// GEN-LAST:event_mnuEnableApiTerminationActionPerformed
+
+    private void mnuDisableApiTerminationActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuDisableApiTerminationActionPerformed
+        try {
+            awsConnectionProvider.setApiTermination(false, getSelectedInstances());
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }// GEN-LAST:event_mnuDisableApiTerminationActionPerformed
+
+    protected String[] getSelectedInstances() {
+        String[] ret = null;
+        int rows[] = tblInstances.getSelectedRows();
+        if (null != rows && 0 < rows.length) {
+            ret = new String[rows.length];
+            for (int index = 0; index < rows.length; index++) {
+                ret[index] = tblInstances.getValueAt(rows[index], 0).toString();
+            }
+        }
+        return ret;
+    }
+
+    private void mnuStartActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuStartActionPerformed
+        try {
+            // GEN-FIRST:event_mnuStartActionPerformed
+            awsConnectionProvider.startInstances(getSelectedInstances());
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to start", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuStartActionPerformed
+
+    private void mnuStopActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuStopActionPerformed
+        try {
+            // GEN-FIRST:event_mnuStopActionPerformed
+            awsConnectionProvider.stopInstances(getSelectedInstances());
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to stop", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuStopActionPerformed
+
+    private void mnuTerminateActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuTerminateActionPerformed
+        try {
+            // GEN-FIRST:event_mnuTerminateActionPerformed
+            awsConnectionProvider.terminateInstances(getSelectedInstances());
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to terminate",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuTerminateActionPerformed
+
+    private void tblInstancesMousePressed(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_tblInstancesMousePressed
+        showPopup(evt);
+    }// GEN-LAST:event_tblInstancesMousePressed
+
+    private void tblInstancesMouseReleased(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_tblInstancesMouseReleased
+        showPopup(evt);
+    }// GEN-LAST:event_tblInstancesMouseReleased
+
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnRefreshActionPerformed
         loadInstances();
     }// GEN-LAST:event_btnRefreshActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnRefresh;
+
+    private javax.swing.JMenuItem mnuCpyInstanceID;
+
+    private javax.swing.JMenuItem mnuCpyPrivateDNS;
+
+    private javax.swing.JMenuItem mnuCpyPrivateIP;
+
+    private javax.swing.JMenuItem mnuCpyPublicDNS;
+
+    private javax.swing.JMenuItem mnuDisableApiTermination;
+
+    private javax.swing.JMenuItem mnuEnableApiTermination;
+
+    private javax.swing.JPopupMenu.Separator mnuSepOne;
+
+    private javax.swing.JPopupMenu.Separator mnuSepTwo;
+
+    private javax.swing.JMenuItem mnuStart;
+
+    private javax.swing.JMenuItem mnuStop;
+
+    private javax.swing.JMenuItem mnuTerminate;
 
     private javax.swing.JPanel pnlInstances;
 
@@ -166,6 +416,8 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     private javax.swing.JScrollPane scrInstances;
 
     private javax.swing.JTable tblInstances;
+
+    private javax.swing.JPopupMenu tblPopup;
     // End of variables declaration//GEN-END:variables
 
 }

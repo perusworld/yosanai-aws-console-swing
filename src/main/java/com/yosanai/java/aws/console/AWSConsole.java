@@ -29,61 +29,32 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.yosanai.java.swing.config.ConfigDialog;
 
 /**
  * 
  * @author Saravana Perumal Shanmugam
  */
-public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvider {
+public class AWSConsole extends javax.swing.JFrame {
 
     /**
      * 
      */
     private static final String CONFIG_PROPERTIES = ".yosanai-aws-config";
 
-    /**
-     * 
-     */
-    public static final String AWS_SECRET = "aws.secret";
-
-    /**
-     * 
-     */
-    public static final String AWS_KEY = "aws.key";
-
     protected MainAWSPanel console;
 
     protected XMLConfiguration config;
 
-    protected AmazonEC2 amazonEC2;
-
-    protected Object lock = new Object();
+    protected AWSConnectionProvider awsConnectionProvider;
 
     /** Creates new form AWSConsole */
     public AWSConsole() {
         initComponents();
-    }
-
-    /*
-     * (non-Jsdoc)
-     * 
-     * @see com.yosanai.java.aws.console.AWSConnectionProvider#getConnection()
-     */
-    @Override
-    public AmazonEC2 getConnection() {
-        AmazonEC2 ret = null;
-        synchronized (lock) {
-            ret = amazonEC2;
-        }
-        return ret;
+        awsConnectionProvider = new DefaultAWSConnectionProvider();
     }
 
     /**
@@ -150,9 +121,9 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
     protected void showConfig(boolean force) {
         ConfigDialog dialog = new ConfigDialog(this, true);
         dialog.setFile(CONFIG_PROPERTIES);
-        dialog.init(AWS_KEY, AWS_SECRET);
+        dialog.init(AWSConnectionProvider.AWS_KEY, AWSConnectionProvider.AWS_SECRET);
         boolean updated = false;
-        if (!force && StringUtils.isNotBlank(dialog.getConfiguration().getString(AWS_KEY))) {
+        if (!force && StringUtils.isNotBlank(dialog.getConfiguration().getString(AWSConnectionProvider.AWS_KEY))) {
             updated = true;
         } else {
             dialog.setVisible(true);
@@ -162,8 +133,8 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
             config = dialog.getConfiguration();
             try {
                 config.save();
-                updateEC2Config(false);
-            } catch (ConfigurationException ex) {
+                awsConnectionProvider.updateEC2Config(false, config);
+            } catch (Exception ex) {
                 Logger.getLogger(AWSConsole.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -181,43 +152,24 @@ public class AWSConsole extends javax.swing.JFrame implements AWSConnectionProvi
         if (null == config) {
             showConfig(false);
         }
-        if (StringUtils.isBlank(config.getString(AWS_KEY))) {
+        if (StringUtils.isBlank(config.getString(AWSConnectionProvider.AWS_KEY))) {
             showConfig(true);
         }
-        updateEC2Config(true);
-        if (null == console && null != amazonEC2) {
+        try {
+            awsConnectionProvider.updateEC2Config(true, config);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "" + e.getLocalizedMessage(), "Failed to initialize connection to AWS",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+        if (null == console && null != awsConnectionProvider.getConnection()) {
             console = new MainAWSPanel();
-            console.setAwsConnectionProvider(this);
+            console.setAwsConnectionProvider(awsConnectionProvider);
             getContentPane().add(console, BorderLayout.CENTER);
             invalidate();
             validate();
             console.init();
         }
     }// GEN-LAST:event_btnAccessActionPerformed
-
-    /**
-     * 
-     */
-    protected void updateEC2Config(boolean reuseExisting) {
-        if (StringUtils.isNotBlank(config.getString(AWS_KEY))) {
-            if (null == amazonEC2 || !reuseExisting) {
-                synchronized (lock) {
-                    if (null != amazonEC2) {
-                        amazonEC2.shutdown();
-                        amazonEC2 = null;
-                    }
-                    try {
-                        amazonEC2 = new AmazonEC2Client(new BasicAWSCredentials(config.getString(AWS_KEY, ""),
-                                config.getString(AWS_SECRET, "")));
-                        amazonEC2.describeInstances();
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(this, "" + e.getLocalizedMessage(),
-                                "Failed to initialize connection to AWS", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * @param args

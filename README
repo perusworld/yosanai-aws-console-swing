@@ -12,3 +12,12 @@ You can run it in two ways.
     java -jar yosanai-aws-console-swing-1.0-jar-with-dependencies.jar
     (NOTE: you need to have atleast JRE installed in order to use this)
 
+
+Using the Yosanai - Amazon Web Services Swing Console
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Instances
+   This panel shows the running instances, right clicking on one or more selected instances allow you to 
+   1.1 Start/Stop/Terminate instances
+   1.2 Enable/Disable API Termination
+   1.3 Copy Instance ID(s)/Public DNS(s)/Private DNS(s)/Private IP(s) to clip board
