@@ -71,9 +71,10 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
                             tags.append(tag.getValue());
                         }
                         try {
+                            boolean apiTermination = awsConnectionProvider.getApiTermination(instance.getInstanceId());
                             tableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
-                                    instance.getPrivateDnsName(), instance.getPublicIpAddress(),
-                                    "" + awsConnectionProvider.getApiTermination(instance.getInstanceId()),
+                                    instance.getPublicIpAddress(), instance.getPrivateDnsName(),
+                                    instance.getPrivateIpAddress(), apiTermination ? "Yes" : "No",
                                     instance.getState().getName(), instance.getInstanceType(), tags.toString() });
                         } catch (Exception ex) {
                             Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -130,6 +131,7 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
     // desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -143,6 +145,7 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         mnuSepTwo = new javax.swing.JPopupMenu.Separator();
         mnuCpyInstanceID = new javax.swing.JMenuItem();
         mnuCpyPublicDNS = new javax.swing.JMenuItem();
+        mnuCpyPublicIP = new javax.swing.JMenuItem();
         mnuCpyPrivateDNS = new javax.swing.JMenuItem();
         mnuCpyPrivateIP = new javax.swing.JMenuItem();
         pnlInstances = new javax.swing.JPanel();
@@ -209,6 +212,14 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         });
         tblPopup.add(mnuCpyPublicDNS);
 
+        mnuCpyPublicIP.setText("Copy Public IP(s) to ClipBoard");
+        mnuCpyPublicIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnuCpyPublicIPActionPerformed(evt);
+            }
+        });
+        tblPopup.add(mnuCpyPublicIP);
+
         mnuCpyPrivateDNS.setText("Copy Private DNS(s) to ClipBoard");
         mnuCpyPrivateDNS.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -232,13 +243,13 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         tblInstances.setAutoCreateRowSorter(true);
         tblInstances.setModel(new javax.swing.table.DefaultTableModel(new Object[][] {
 
-        }, new String[] { "Instance ID", "Public DNS", "Private DNS", "Private IP", "API Terminate(disabled)", "State",
-                "Type", "Tag" }) {
-            Class[] types = new Class[] { java.lang.String.class, java.lang.String.class, java.lang.String.class,
+        }, new String[] { "Instance ID", "Public DNS", "Public IP Address", "Private DNS", "Private IP",
+                "Terminate via API", "State", "Type", "Tag" }) {
+            Class[] types = new Class[] { java.lang.String.class, java.lang.String.class, java.lang.Object.class,
                     java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class,
-                    java.lang.String.class };
+                    java.lang.String.class, java.lang.String.class };
 
-            boolean[] canEdit = new boolean[] { false, false, false, false, false, false, false, false };
+            boolean[] canEdit = new boolean[] { false, false, false, false, false, false, false, false, false };
 
             public Class getColumnClass(int columnIndex) {
                 return types[columnIndex];
@@ -277,6 +288,15 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         add(pnlInstances, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void mnuCpyPublicIPActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPublicIPActionPerformed
+        try {
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("publicIpAddress", ",", getSelectedInstances()));
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_mnuCpyPublicIPActionPerformed
+
     private void mnuCpyInstanceIDActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyInstanceIDActionPerformed
         try {
             setToClipBoard(awsConnectionProvider.getInstanceDetails("instanceId", ",", getSelectedInstances()));
@@ -306,7 +326,7 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
     private void mnuCpyPrivateIPActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPrivateIPActionPerformed
         try {
-            setToClipBoard(awsConnectionProvider.getInstanceDetails("publicIpAddress", ",", getSelectedInstances()));
+            setToClipBoard(awsConnectionProvider.getInstanceDetails("privateIpAddress", ",", getSelectedInstances()));
         } catch (Exception ex) {
             Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to copy", JOptionPane.ERROR_MESSAGE);
@@ -394,6 +414,8 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     private javax.swing.JMenuItem mnuCpyPrivateIP;
 
     private javax.swing.JMenuItem mnuCpyPublicDNS;
+
+    private javax.swing.JMenuItem mnuCpyPublicIP;
 
     private javax.swing.JMenuItem mnuDisableApiTermination;
 

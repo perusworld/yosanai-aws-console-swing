@@ -242,7 +242,7 @@ public class DefaultAWSConnectionProvider implements AWSConnectionProvider {
             DescribeInstanceAttributeResult describeInstanceAttributeResult = getConnection()
                     .describeInstanceAttribute(
                             new DescribeInstanceAttributeRequest(instanceId, DISABLE_API_TERMINATION));
-            ret = describeInstanceAttributeResult.getInstanceAttribute().getDisableApiTermination();
+            ret = !describeInstanceAttributeResult.getInstanceAttribute().getDisableApiTermination();
         }
         return ret;
     }
