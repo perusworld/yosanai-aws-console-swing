@@ -32,7 +32,7 @@ import javax.swing.JOptionPane;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 
-import com.yosanai.java.swing.config.ConfigDialog;
+import com.yosanai.java.swing.config.FileBackedConfigDialog;
 
 /**
  * 
@@ -119,7 +119,7 @@ public class AWSConsole extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     protected void showConfig(boolean force) {
-        ConfigDialog dialog = new ConfigDialog(this, true);
+        FileBackedConfigDialog dialog = new FileBackedConfigDialog(this, true);
         dialog.setFile(CONFIG_PROPERTIES);
         dialog.init(AWSConnectionProvider.AWS_KEY, AWSConnectionProvider.AWS_SECRET);
         boolean updated = false;
@@ -127,7 +127,7 @@ public class AWSConsole extends javax.swing.JFrame {
             updated = true;
         } else {
             dialog.setVisible(true);
-            updated = (ConfigDialog.RET_OK == dialog.getReturnStatus());
+            updated = (FileBackedConfigDialog.RET_OK == dialog.getReturnStatus());
         }
         if (updated) {
             config = dialog.getConfiguration();
@@ -163,6 +163,7 @@ public class AWSConsole extends javax.swing.JFrame {
         }
         if (null == console && null != awsConnectionProvider.getConnection()) {
             console = new MainAWSPanel();
+            console.setParentFrame(this);
             console.setAwsConnectionProvider(awsConnectionProvider);
             getContentPane().add(console, BorderLayout.CENTER);
             invalidate();

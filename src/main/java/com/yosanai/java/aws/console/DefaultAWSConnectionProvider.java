@@ -42,8 +42,11 @@ import com.amazonaws.services.ec2.model.DescribeInstanceAttributeResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.InstanceType;
 import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.StartInstancesRequest;
 import com.amazonaws.services.ec2.model.StopInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
@@ -287,4 +290,22 @@ public class DefaultAWSConnectionProvider implements AWSConnectionProvider {
         }
         return ret.toString();
     }
+
+    /*
+     * (non-Jsdoc)
+     * 
+     * @see
+     * com.yosanai.java.aws.console.AWSConnectionProvider#launchInstance(java
+     * .lang.String, com.amazonaws.services.ec2.model.InstanceType, int)
+     */
+    @Override
+    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount) throws Exception {
+        if (1 > instanceCount) { throw new Exception("Invalid instanceCount " + instanceCount); }
+        if (null == instanceType) { throw new Exception("Invalid instanceType"); }
+        if (StringUtils.isBlank(amiId)) { throw new Exception("Invalid amiId"); }
+        RunInstancesRequest runInstancesRequest = new RunInstancesRequest(amiId, instanceCount, instanceCount);
+        runInstancesRequest.setInstanceType(instanceType.toString());
+        RunInstancesResult result = getConnection().runInstances(runInstancesRequest);
+    }
+
 }

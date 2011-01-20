@@ -24,42 +24,26 @@
  */
 package com.yosanai.java.aws.console;
 
-import org.apache.commons.configuration.Configuration;
-
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.InstanceType;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * @author Saravana Perumal Shanmugam
- * 
+ *
  */
-public interface AWSConnectionProvider {
-    /**
-     * 
-     */
-    public static final String AWS_SECRET = "aws.secret";
+public class Messages {
+    private static final String BUNDLE_NAME = "com.yosanai.java.aws.console.messages"; //$NON-NLS-1$
 
-    /**
-     * 
-     */
-    public static final String AWS_KEY = "aws.key";
+    private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 
-    public AmazonEC2 getConnection();
+    private Messages() {
+    }
 
-    public void updateEC2Config(boolean reuseExisting, Configuration config) throws Exception;
-
-    public void startInstances(String... instanceIds) throws Exception;
-
-    public void stopInstances(String... instanceIds) throws Exception;
-
-    public void terminateInstances(String... instanceIds) throws Exception;
-
-    public void setApiTermination(boolean enable, String... instanceIds) throws Exception;
-
-    public boolean getApiTermination(String instanceId) throws Exception;
-
-    public String getInstanceDetails(String property, String separator, String... instanceIds) throws Exception;
-
-    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount) throws Exception;
-
+    public static String getString(String key) {
+        try {
+            return RESOURCE_BUNDLE.getString(key);
+        } catch (MissingResourceException e) {
+            return '!' + key + '!';
+        }
+    }
 }

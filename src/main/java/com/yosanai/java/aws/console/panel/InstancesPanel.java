@@ -25,11 +25,15 @@ package com.yosanai.java.aws.console.panel;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
@@ -44,7 +48,11 @@ import com.yosanai.java.aws.console.AWSConnectionProvider;
  */
 public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd:HH-mm");
+
     protected AWSConnectionProvider awsConnectionProvider;
+
+    protected JFrame parentFrame;
 
     /** Creates new form InstancesPanel */
     public InstancesPanel() {
@@ -75,7 +83,10 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
                             tableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
                                     instance.getPublicIpAddress(), instance.getPrivateDnsName(),
                                     instance.getPrivateIpAddress(), apiTermination ? "Yes" : "No",
-                                    instance.getState().getName(), instance.getInstanceType(), tags.toString() });
+                                    instance.getState().getName(), instance.getInstanceType(), instance.getKeyName(),
+                                    StringUtils.join(reservation.getGroupNames(), ","),
+                                    instance.getPlacement().getAvailabilityZone(),
+                                    DATE_FORMAT.format(instance.getLaunchTime()), tags.toString() });
                         } catch (Exception ex) {
                             Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -98,6 +109,21 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     @Override
     public void init() {
         loadInstances();
+    }
+
+    /**
+     * @return the parentFrame
+     */
+    public JFrame getParentFrame() {
+        return parentFrame;
+    }
+
+    /**
+     * @param parentFrame
+     *            the parentFrame to set
+     */
+    public void setParentFrame(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
     }
 
     public void showPopup(MouseEvent e) {
@@ -132,6 +158,14 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
     // desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -148,10 +182,12 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         mnuCpyPublicIP = new javax.swing.JMenuItem();
         mnuCpyPrivateDNS = new javax.swing.JMenuItem();
         mnuCpyPrivateIP = new javax.swing.JMenuItem();
+        mnuSepThree = new javax.swing.JPopupMenu.Separator();
         pnlInstances = new javax.swing.JPanel();
         scrInstances = new javax.swing.JScrollPane();
         tblInstances = new javax.swing.JTable();
         ponlInstanceMain = new javax.swing.JPanel();
+        btnLaunch = new javax.swing.JButton();
         btnRefresh = new javax.swing.JButton();
 
         mnuStart.setText("Start");
@@ -235,6 +271,7 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
             }
         });
         tblPopup.add(mnuCpyPrivateIP);
+        tblPopup.add(mnuSepThree);
 
         setLayout(new java.awt.BorderLayout());
 
@@ -244,12 +281,14 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         tblInstances.setModel(new javax.swing.table.DefaultTableModel(new Object[][] {
 
         }, new String[] { "Instance ID", "Public DNS", "Public IP Address", "Private DNS", "Private IP",
-                "Terminate via API", "State", "Type", "Tag" }) {
+                "Terminate via API", "State", "Type", "Key", "Security Group", "Location", "Launched At", "Tag" }) {
             Class[] types = new Class[] { java.lang.String.class, java.lang.String.class, java.lang.Object.class,
+                    java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class,
                     java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class,
                     java.lang.String.class, java.lang.String.class };
 
-            boolean[] canEdit = new boolean[] { false, false, false, false, false, false, false, false, false };
+            boolean[] canEdit = new boolean[] { false, false, false, false, false, false, false, false, false, false,
+                    false, false, false };
 
             public Class getColumnClass(int columnIndex) {
                 return types[columnIndex];
@@ -273,7 +312,15 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
         pnlInstances.add(scrInstances, java.awt.BorderLayout.CENTER);
 
-        ponlInstanceMain.setLayout(new java.awt.BorderLayout());
+        ponlInstanceMain.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+
+        btnLaunch.setText("Launch");
+        btnLaunch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLaunchActionPerformed(evt);
+            }
+        });
+        ponlInstanceMain.add(btnLaunch);
 
         btnRefresh.setText("Refresh");
         btnRefresh.addActionListener(new java.awt.event.ActionListener() {
@@ -281,12 +328,28 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
                 btnRefreshActionPerformed(evt);
             }
         });
-        ponlInstanceMain.add(btnRefresh, java.awt.BorderLayout.CENTER);
+        ponlInstanceMain.add(btnRefresh);
 
         pnlInstances.add(ponlInstanceMain, java.awt.BorderLayout.PAGE_START);
 
         add(pnlInstances, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnLaunchActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnLaunchActionPerformed
+        LaunchDialog dialog = new LaunchDialog(parentFrame, true);
+        dialog.setSize(600, 200);
+        dialog.setVisible(true);
+        if (LaunchDialog.RET_OK == dialog.getReturnStatus()) {
+            try {
+                awsConnectionProvider.launchInstance(dialog.getAMIID(), dialog.getSelectedInstanceType(),
+                        dialog.getSelectedInstanceCount());
+            } catch (Exception ex) {
+                Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to launch",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }// GEN-LAST:event_btnLaunchActionPerformed
 
     private void mnuCpyPublicIPActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_mnuCpyPublicIPActionPerformed
         try {
@@ -405,6 +468,8 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     }// GEN-LAST:event_btnRefreshActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnLaunch;
+
     private javax.swing.JButton btnRefresh;
 
     private javax.swing.JMenuItem mnuCpyInstanceID;
@@ -422,6 +487,8 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     private javax.swing.JMenuItem mnuEnableApiTermination;
 
     private javax.swing.JPopupMenu.Separator mnuSepOne;
+
+    private javax.swing.JPopupMenu.Separator mnuSepThree;
 
     private javax.swing.JPopupMenu.Separator mnuSepTwo;
 

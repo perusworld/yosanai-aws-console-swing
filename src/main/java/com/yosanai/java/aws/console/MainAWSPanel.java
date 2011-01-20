@@ -22,6 +22,8 @@
 
 package com.yosanai.java.aws.console;
 
+import javax.swing.JFrame;
+
 /**
  * 
  * @author Saravana Perumal Shanmugam
@@ -30,9 +32,27 @@ public class MainAWSPanel extends javax.swing.JPanel implements AWSAware {
 
     protected AWSConnectionProvider awsConnectionProvider;
 
+    protected JFrame parentFrame;
+
     /** Creates new form MainAWSPanel */
     public MainAWSPanel() {
         initComponents();
+    }
+
+    /**
+     * @return the parentFrame
+     */
+    public JFrame getParentFrame() {
+        return parentFrame;
+    }
+
+    /**
+     * @param parentFrame
+     *            the parentFrame to set
+     */
+    public void setParentFrame(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
+        instancesPanel.setParentFrame(parentFrame);
     }
 
     /**
