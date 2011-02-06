@@ -32,6 +32,9 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -41,11 +44,13 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.Tag;
 import com.yosanai.java.aws.console.AWSAware;
 import com.yosanai.java.aws.console.AWSConnectionProvider;
+import com.yosanai.java.swing.editor.ObjectEditorTableModel;
 
 /**
  * 
  * @author Saravana Perumal Shanmugam
  */
+@SuppressWarnings("serial")
 public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd:HH-mm");
@@ -54,9 +59,69 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
     protected JFrame parentFrame;
 
+    protected String nameTag = "name";
+
+    protected DefaultTableModel instancesTableModel;
+
+    protected ObjectEditorTableModel instanceTableModel;
+
+    public class InstanceObjectWrapper {
+        protected Instance instance;
+
+        protected String name;
+
+        /**
+         * @param instance
+         * @param name
+         */
+        private InstanceObjectWrapper(Instance instance, String name) {
+            super();
+            this.instance = instance;
+            this.name = name;
+        }
+
+        /*
+         * (non-Jsdoc)
+         * 
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            String ret = instance.getInstanceId();
+            if (null != name) {
+                ret += "(" + name + ")";
+            }
+            return ret;
+        }
+    }
+
     /** Creates new form InstancesPanel */
     public InstancesPanel() {
         initComponents();
+        DefaultTreeModel treeModel = (DefaultTreeModel) trInstances.getModel();
+        DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) treeModel.getRoot();
+        rootNode.setAllowsChildren(true);
+        rootNode.setUserObject("Instances");
+        instancesTableModel = (DefaultTableModel) tblInstances.getModel();
+        instanceTableModel = new ObjectEditorTableModel();
+        instanceTableModel.setEditable(false);
+        instanceTableModel.setExpandAllProperties(true);
+        trInstances.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+    }
+
+    /**
+     * @return the nameTag
+     */
+    public String getNameTag() {
+        return nameTag;
+    }
+
+    /**
+     * @param nameTag
+     *            the nameTag to set
+     */
+    public void setNameTag(String nameTag) {
+        this.nameTag = nameTag;
     }
 
     public void loadInstances() {
@@ -64,29 +129,42 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
             @Override
             public void run() {
+                DefaultTreeModel treeModel = (DefaultTreeModel) trInstances.getModel();
+                DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) treeModel.getRoot();
                 tblInstances.clearSelection();
-                DefaultTableModel tableModel = (DefaultTableModel) tblInstances.getModel();
+                trInstances.clearSelection();
+                rootNode.removeAllChildren();
+                treeModel.reload();
+                tblInstances.setModel(instancesTableModel);
                 DescribeInstancesResult result = awsConnectionProvider.getConnection().describeInstances();
-                while (0 < tableModel.getRowCount()) {
-                    tableModel.removeRow(0);
+                while (0 < instancesTableModel.getRowCount()) {
+                    instancesTableModel.removeRow(0);
                 }
                 for (Reservation reservation : result.getReservations()) {
                     for (Instance instance : reservation.getInstances()) {
+                        String name = null;
                         StringBuilder tags = new StringBuilder();
                         for (Tag tag : instance.getTags()) {
                             tags.append(tag.getKey());
                             tags.append("=");
                             tags.append(tag.getValue());
+                            if (StringUtils.equalsIgnoreCase(nameTag, tag.getKey())) {
+                                name = tag.getValue();
+                            }
                         }
                         try {
                             boolean apiTermination = awsConnectionProvider.getApiTermination(instance.getInstanceId());
-                            tableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
+                            instancesTableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
                                     instance.getPublicIpAddress(), instance.getPrivateDnsName(),
                                     instance.getPrivateIpAddress(), apiTermination ? "Yes" : "No",
                                     instance.getState().getName(), instance.getInstanceType(), instance.getKeyName(),
                                     StringUtils.join(reservation.getGroupNames(), ","),
                                     instance.getPlacement().getAvailabilityZone(),
                                     DATE_FORMAT.format(instance.getLaunchTime()), tags.toString() });
+                            DefaultMutableTreeNode instanceNode = new DefaultMutableTreeNode(new InstanceObjectWrapper(
+                                    instance, name), false);
+                            rootNode.add(instanceNode);
+                            treeModel.reload();
                         } catch (Exception ex) {
                             Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -166,6 +244,8 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
     // desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -184,11 +264,14 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         mnuCpyPrivateIP = new javax.swing.JMenuItem();
         mnuSepThree = new javax.swing.JPopupMenu.Separator();
         pnlInstances = new javax.swing.JPanel();
-        scrInstances = new javax.swing.JScrollPane();
-        tblInstances = new javax.swing.JTable();
-        ponlInstanceMain = new javax.swing.JPanel();
+        pnlInstanceMain = new javax.swing.JPanel();
         btnLaunch = new javax.swing.JButton();
         btnRefresh = new javax.swing.JButton();
+        spltInstances = new javax.swing.JSplitPane();
+        scrInstances = new javax.swing.JScrollPane();
+        tblInstances = new javax.swing.JTable();
+        scrInsTree = new javax.swing.JScrollPane();
+        trInstances = new javax.swing.JTree();
 
         mnuStart.setText("Start");
         mnuStart.addActionListener(new java.awt.event.ActionListener() {
@@ -277,6 +360,28 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
         pnlInstances.setLayout(new java.awt.BorderLayout());
 
+        pnlInstanceMain.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+
+        btnLaunch.setText("Launch");
+        btnLaunch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLaunchActionPerformed(evt);
+            }
+        });
+        pnlInstanceMain.add(btnLaunch);
+
+        btnRefresh.setText("Refresh");
+        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRefreshActionPerformed(evt);
+            }
+        });
+        pnlInstanceMain.add(btnRefresh);
+
+        pnlInstances.add(pnlInstanceMain, java.awt.BorderLayout.PAGE_START);
+
+        spltInstances.setResizeWeight(0.3);
+
         tblInstances.setAutoCreateRowSorter(true);
         tblInstances.setModel(new javax.swing.table.DefaultTableModel(new Object[][] {
 
@@ -310,30 +415,58 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
         });
         scrInstances.setViewportView(tblInstances);
 
-        pnlInstances.add(scrInstances, java.awt.BorderLayout.CENTER);
+        spltInstances.setRightComponent(scrInstances);
 
-        ponlInstanceMain.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+        javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
+        trInstances.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        trInstances.addTreeExpansionListener(new javax.swing.event.TreeExpansionListener() {
+            public void treeCollapsed(javax.swing.event.TreeExpansionEvent evt) {
+                trInstancesTreeCollapsed(evt);
+            }
 
-        btnLaunch.setText("Launch");
-        btnLaunch.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLaunchActionPerformed(evt);
+            public void treeExpanded(javax.swing.event.TreeExpansionEvent evt) {
+                trInstancesTreeExpanded(evt);
             }
         });
-        ponlInstanceMain.add(btnLaunch);
-
-        btnRefresh.setText("Refresh");
-        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRefreshActionPerformed(evt);
+        trInstances.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                trInstancesValueChanged(evt);
             }
         });
-        ponlInstanceMain.add(btnRefresh);
+        scrInsTree.setViewportView(trInstances);
 
-        pnlInstances.add(ponlInstanceMain, java.awt.BorderLayout.PAGE_START);
+        spltInstances.setLeftComponent(scrInsTree);
+
+        pnlInstances.add(spltInstances, java.awt.BorderLayout.CENTER);
 
         add(pnlInstances, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void trInstancesValueChanged(javax.swing.event.TreeSelectionEvent evt) {// GEN-FIRST:event_trInstancesValueChanged
+        Object nodeObj = evt.getPath().getLastPathComponent();
+        if (null != nodeObj) {
+            if (nodeObj instanceof DefaultMutableTreeNode) {
+                DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) nodeObj;
+                Object userObject = treeNode.getUserObject();
+                if (userObject instanceof InstanceObjectWrapper) {
+                    InstanceObjectWrapper wrapper = (InstanceObjectWrapper) userObject;
+                    instanceTableModel.setObject(wrapper.instance);
+                    tblInstances.setModel(instanceTableModel);
+                } else {
+                    tblInstances.setModel(instancesTableModel);
+                }
+
+            }
+        }
+    }// GEN-LAST:event_trInstancesValueChanged
+
+    private void trInstancesTreeCollapsed(javax.swing.event.TreeExpansionEvent evt) {// GEN-FIRST:event_trInstancesTreeCollapsed
+        // TODO add your handling code here:
+    }// GEN-LAST:event_trInstancesTreeCollapsed
+
+    private void trInstancesTreeExpanded(javax.swing.event.TreeExpansionEvent evt) {// GEN-FIRST:event_trInstancesTreeExpanded
+        // TODO add your handling code here:
+    }// GEN-LAST:event_trInstancesTreeExpanded
 
     private void btnLaunchActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnLaunchActionPerformed
         LaunchDialog dialog = new LaunchDialog(parentFrame, true);
@@ -498,15 +631,21 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
     private javax.swing.JMenuItem mnuTerminate;
 
+    private javax.swing.JPanel pnlInstanceMain;
+
     private javax.swing.JPanel pnlInstances;
 
-    private javax.swing.JPanel ponlInstanceMain;
+    private javax.swing.JScrollPane scrInsTree;
 
     private javax.swing.JScrollPane scrInstances;
+
+    private javax.swing.JSplitPane spltInstances;
 
     private javax.swing.JTable tblInstances;
 
     private javax.swing.JPopupMenu tblPopup;
+
+    private javax.swing.JTree trInstances;
     // End of variables declaration//GEN-END:variables
 
 }
