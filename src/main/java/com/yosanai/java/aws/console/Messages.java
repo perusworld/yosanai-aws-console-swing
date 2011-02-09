@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
 
 /**
  * @author Saravana Perumal Shanmugam
- *
+ * 
  */
 public class Messages {
     private static final String BUNDLE_NAME = "com.yosanai.java.aws.console.messages"; //$NON-NLS-1$
