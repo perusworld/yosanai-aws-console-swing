@@ -22,7 +22,14 @@
 
 package com.yosanai.java.aws.console.panel;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.table.DefaultTableModel;
 
 import com.amazonaws.services.ec2.model.InstanceType;
 import com.yosanai.java.aws.console.Messages;
@@ -31,6 +38,7 @@ import com.yosanai.java.aws.console.Messages;
  * 
  * @author Saravana Perumal Shanmugam
  */
+@SuppressWarnings("serial")
 public class LaunchDialog extends javax.swing.JDialog {
     /** A return status code - returned if Cancel button has been pressed */
     public static final int RET_CANCEL = 0;
@@ -42,6 +50,7 @@ public class LaunchDialog extends javax.swing.JDialog {
     public LaunchDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        cfgPanel.setEditable(0, true);
         DefaultComboBoxModel model = (DefaultComboBoxModel) cboInstance.getModel();
         for (InstanceType instanceType : InstanceType.values()) {
             model.addElement(instanceType);
@@ -69,6 +78,46 @@ public class LaunchDialog extends javax.swing.JDialog {
         return txtAmi.getText();
     }
 
+    public Map<String, String> getTags() {
+        return cfgPanel.getConfig();
+    }
+
+    public void setKeyNames(Collection<String> keyNames) {
+        cboKeyName.removeAllItems();
+        TreeSet<String> keys = new TreeSet<String>(keyNames);
+        for (String keyName : keys) {
+            cboKeyName.addItem(keyName);
+        }
+    }
+
+    public String getKeyName() {
+        return cboKeyName.getSelectedItem().toString();
+    }
+
+    public void setSecurityGroups(Collection<String> securityGroups) {
+        DefaultTableModel model = (DefaultTableModel) tblSecurityGroups.getModel();
+        while (0 < model.getRowCount()) {
+            model.removeRow(0);
+        }
+        for (String securityGroup : securityGroups) {
+            model.addRow(new Object[] { false, securityGroup });
+        }
+    }
+
+    public Collection<String> getSecurityGroups() {
+        List<String> ret = new ArrayList<String>();
+        for (int index = 0; index < tblSecurityGroups.getModel().getRowCount(); index++) {
+            if ((Boolean) tblSecurityGroups.getValueAt(index, 0)) {
+                ret.add(tblSecurityGroups.getValueAt(index, 1).toString());
+            }
+        }
+        return ret;
+    }
+
+    public boolean getTerminationViaAPI() {
+        return rdoYes.isSelected();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -79,23 +128,40 @@ public class LaunchDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
     // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
+    // <editor-fold defaultstate="collapsed"
     // desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
+        btnGrpAPITerminate = new javax.swing.ButtonGroup();
         pnlBottom = new javax.swing.JPanel();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
         pnlCenter = new javax.swing.JPanel();
+        lblAMI = new javax.swing.JLabel();
+        txtAmi = new javax.swing.JTextField();
         lblInstance = new javax.swing.JLabel();
         cboInstance = new javax.swing.JComboBox();
-        sldInstances = new javax.swing.JSlider();
+        lblKeyName = new javax.swing.JLabel();
+        cboKeyName = new javax.swing.JComboBox();
         lblInstances = new javax.swing.JLabel();
+        sldInstances = new javax.swing.JSlider();
         lblDescription = new javax.swing.JLabel();
         scrDesc = new javax.swing.JScrollPane();
         txtDesc = new javax.swing.JTextArea();
-        lblAMI = new javax.swing.JLabel();
-        txtAmi = new javax.swing.JTextField();
+        lblSecurityGroups = new javax.swing.JLabel();
+        scrSecurityGroups = new javax.swing.JScrollPane();
+        tblSecurityGroups = new javax.swing.JTable();
+        lblAPITerminate = new javax.swing.JLabel();
+        pnlAPITerminate = new javax.swing.JPanel();
+        rdoYes = new javax.swing.JRadioButton();
+        rdoNo = new javax.swing.JRadioButton();
+        lblTags = new javax.swing.JLabel();
+        cfgPanel = new com.yosanai.java.swing.config.ConfigPanel();
 
         setModalityType(java.awt.Dialog.ModalityType.APPLICATION_MODAL);
         setResizable(false);
@@ -127,10 +193,18 @@ public class LaunchDialog extends javax.swing.JDialog {
 
         pnlCenter.setLayout(new java.awt.GridBagLayout());
 
+        lblAMI.setText("AMI ID");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblAMI, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        pnlCenter.add(txtAmi, gridBagConstraints);
+
         lblInstance.setText("Instance Type");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
         pnlCenter.add(lblInstance, gridBagConstraints);
 
         cboInstance.addActionListener(new java.awt.event.ActionListener() {
@@ -140,9 +214,23 @@ public class LaunchDialog extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         pnlCenter.add(cboInstance, gridBagConstraints);
+
+        lblKeyName.setText("Key Pair");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblKeyName, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        pnlCenter.add(cboKeyName, gridBagConstraints);
+
+        lblInstances.setText("Instances");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblInstances, gridBagConstraints);
 
         sldInstances.setMajorTickSpacing(1);
         sldInstances.setMaximum(10);
@@ -153,21 +241,13 @@ public class LaunchDialog extends javax.swing.JDialog {
         sldInstances.setValue(1);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 0.1;
         pnlCenter.add(sldInstances, gridBagConstraints);
 
-        lblInstances.setText("Instances");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        pnlCenter.add(lblInstances, gridBagConstraints);
-
         lblDescription.setText("Description");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
         pnlCenter.add(lblDescription, gridBagConstraints);
 
         txtDesc.setColumns(20);
@@ -178,18 +258,71 @@ public class LaunchDialog extends javax.swing.JDialog {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weighty = 2.0;
         pnlCenter.add(scrDesc, gridBagConstraints);
 
-        lblAMI.setText("AMI ID");
-        pnlCenter.add(lblAMI, new java.awt.GridBagConstraints());
+        lblSecurityGroups.setText("Security Groups");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblSecurityGroups, gridBagConstraints);
+
+        tblSecurityGroups.setModel(new javax.swing.table.DefaultTableModel(new Object[][] {
+
+        }, new String[] { "", "Security Group" }) {
+            Class[] types = new Class[] { java.lang.Boolean.class, java.lang.String.class };
+
+            boolean[] canEdit = new boolean[] { true, false };
+
+            public Class getColumnClass(int columnIndex) {
+                return types[columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit[columnIndex];
+            }
+        });
+        tblSecurityGroups.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+        tblSecurityGroups.getTableHeader().setReorderingAllowed(false);
+        scrSecurityGroups.setViewportView(tblSecurityGroups);
+        tblSecurityGroups.getColumnModel().getColumn(0).setResizable(false);
+        tblSecurityGroups.getColumnModel().getColumn(0).setPreferredWidth(30);
+        tblSecurityGroups.getColumnModel().getColumn(1).setPreferredWidth(300);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weighty = 2.0;
+        pnlCenter.add(scrSecurityGroups, gridBagConstraints);
+
+        lblAPITerminate.setText("Terminate Via API");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblAPITerminate, gridBagConstraints);
+
+        btnGrpAPITerminate.add(rdoYes);
+        rdoYes.setSelected(true);
+        rdoYes.setText("Yes");
+        pnlAPITerminate.add(rdoYes);
+
+        btnGrpAPITerminate.add(rdoNo);
+        rdoNo.setText("No");
+        pnlAPITerminate.add(rdoNo);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        pnlCenter.add(txtAmi, gridBagConstraints);
+        pnlCenter.add(pnlAPITerminate, gridBagConstraints);
+
+        lblTags.setText("Tags");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        pnlCenter.add(lblTags, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weighty = 2.0;
+        pnlCenter.add(cfgPanel, gridBagConstraints);
 
         getContentPane().add(pnlCenter, java.awt.BorderLayout.CENTER);
 
@@ -241,11 +374,19 @@ public class LaunchDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.ButtonGroup btnGrpAPITerminate;
+
     private javax.swing.JButton cancelButton;
 
     private javax.swing.JComboBox cboInstance;
 
+    private javax.swing.JComboBox cboKeyName;
+
+    private com.yosanai.java.swing.config.ConfigPanel cfgPanel;
+
     private javax.swing.JLabel lblAMI;
+
+    private javax.swing.JLabel lblAPITerminate;
 
     private javax.swing.JLabel lblDescription;
 
@@ -253,15 +394,31 @@ public class LaunchDialog extends javax.swing.JDialog {
 
     private javax.swing.JLabel lblInstances;
 
+    private javax.swing.JLabel lblKeyName;
+
+    private javax.swing.JLabel lblSecurityGroups;
+
+    private javax.swing.JLabel lblTags;
+
     private javax.swing.JButton okButton;
+
+    private javax.swing.JPanel pnlAPITerminate;
 
     private javax.swing.JPanel pnlBottom;
 
     private javax.swing.JPanel pnlCenter;
 
+    private javax.swing.JRadioButton rdoNo;
+
+    private javax.swing.JRadioButton rdoYes;
+
     private javax.swing.JScrollPane scrDesc;
 
+    private javax.swing.JScrollPane scrSecurityGroups;
+
     private javax.swing.JSlider sldInstances;
+
+    private javax.swing.JTable tblSecurityGroups;
 
     private javax.swing.JTextField txtAmi;
 

@@ -26,8 +26,10 @@ package com.yosanai.java.aws.console;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
@@ -37,18 +39,24 @@ import org.springframework.beans.BeanWrapperImpl;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.DescribeInstanceAttributeResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeKeyPairsResult;
+import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceType;
+import com.amazonaws.services.ec2.model.KeyPairInfo;
 import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.StartInstancesRequest;
 import com.amazonaws.services.ec2.model.StopInstancesRequest;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 
 /**
@@ -295,17 +303,69 @@ public class DefaultAWSConnectionProvider implements AWSConnectionProvider {
      * (non-Jsdoc)
      * 
      * @see
-     * com.yosanai.java.aws.console.AWSConnectionProvider#launchInstance(java
-     * .lang.String, com.amazonaws.services.ec2.model.InstanceType, int)
+     * com.yosanai.java.aws.console.AWSConnectionProvider#getSecurityGroups()
      */
     @Override
-    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount) throws Exception {
+    public Collection<String> getSecurityGroups() throws Exception {
+        ArrayList<String> ret = new ArrayList<String>();
+        DescribeSecurityGroupsResult result = getConnection().describeSecurityGroups();
+        if (null != result && null != result.getSecurityGroups()) {
+            for (SecurityGroup securityGroup : result.getSecurityGroups()) {
+                ret.add(securityGroup.getGroupName());
+            }
+        }
+        return ret;
+    }
+
+    /*
+     * (non-Jsdoc)
+     * 
+     * @see com.yosanai.java.aws.console.AWSConnectionProvider#getKeyPairNames()
+     */
+    @Override
+    public Collection<String> getKeyPairNames() throws Exception {
+        ArrayList<String> ret = new ArrayList<String>();
+        DescribeKeyPairsResult result = getConnection().describeKeyPairs();
+        if (null != result && null != result.getKeyPairs()) {
+            for (KeyPairInfo keyPairInfo : result.getKeyPairs()) {
+                ret.add(keyPairInfo.getKeyName());
+            }
+        }
+        return ret;
+    }
+
+    /*
+     * (non-Jsdoc)
+     * 
+     * @see
+     * com.yosanai.java.aws.console.AWSConnectionProvider#launchInstance(java
+     * .lang.String, com.amazonaws.services.ec2.model.InstanceType, int,
+     * java.lang.String, java.util.Collection, boolean, java.util.Map)
+     */
+    @Override
+    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount, String keyName,
+            Collection<String> securityGroups, boolean terminateViaAPI, Map<String, String> tags) throws Exception {
         if (1 > instanceCount) { throw new Exception("Invalid instanceCount " + instanceCount); }
         if (null == instanceType) { throw new Exception("Invalid instanceType"); }
         if (StringUtils.isBlank(amiId)) { throw new Exception("Invalid amiId"); }
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest(amiId, instanceCount, instanceCount);
+        runInstancesRequest.setKeyName(keyName);
+        runInstancesRequest.setSecurityGroups(securityGroups);
+        runInstancesRequest.setDisableApiTermination(!terminateViaAPI);
         runInstancesRequest.setInstanceType(instanceType.toString());
         RunInstancesResult result = getConnection().runInstances(runInstancesRequest);
+        if (null != tags && !tags.isEmpty()) {
+            List<Tag> tagList = new ArrayList<Tag>();
+            for (String key : tags.keySet()) {
+                tagList.add(new Tag(key, tags.get(key)));
+            }
+            List<String> resources = new ArrayList<String>();
+            Reservation reservation = result.getReservation();
+            for (Instance instance : reservation.getInstances()) {
+                resources.add(instance.getInstanceId());
+            }
+            getConnection().createTags(new CreateTagsRequest(resources, tagList));
+        }
     }
 
 }

@@ -24,6 +24,9 @@
  */
 package com.yosanai.java.aws.console;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.apache.commons.configuration.Configuration;
 
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -60,6 +63,11 @@ public interface AWSConnectionProvider {
 
     public String getInstanceDetails(String property, String separator, String... instanceIds) throws Exception;
 
-    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount) throws Exception;
+    public Collection<String> getSecurityGroups() throws Exception;
+
+    public Collection<String> getKeyPairNames() throws Exception;
+
+    public void launchInstance(String amiId, InstanceType instanceType, int instanceCount, String keyName,
+            Collection<String> securityGroups, boolean terminateViaAPI, Map<String, String> tags) throws Exception;
 
 }

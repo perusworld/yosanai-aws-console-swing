@@ -38,6 +38,7 @@ import com.yosanai.java.swing.config.FileBackedConfigDialog;
  * 
  * @author Saravana Perumal Shanmugam
  */
+@SuppressWarnings("serial")
 public class AWSConsole extends javax.swing.JFrame {
 
     /**

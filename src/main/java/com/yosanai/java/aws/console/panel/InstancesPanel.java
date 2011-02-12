@@ -154,10 +154,11 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
                         }
                         try {
                             boolean apiTermination = awsConnectionProvider.getApiTermination(instance.getInstanceId());
-                            instancesTableModel.addRow(new Object[] { instance.getInstanceId(), instance.getPublicDnsName(),
-                                    instance.getPublicIpAddress(), instance.getPrivateDnsName(),
-                                    instance.getPrivateIpAddress(), apiTermination ? "Yes" : "No",
-                                    instance.getState().getName(), instance.getInstanceType(), instance.getKeyName(),
+                            instancesTableModel.addRow(new Object[] { instance.getInstanceId(),
+                                    instance.getPublicDnsName(), instance.getPublicIpAddress(),
+                                    instance.getPrivateDnsName(), instance.getPrivateIpAddress(),
+                                    apiTermination ? "Yes" : "No", instance.getState().getName(),
+                                    instance.getInstanceType(), instance.getKeyName(),
                                     StringUtils.join(reservation.getGroupNames(), ","),
                                     instance.getPlacement().getAvailabilityZone(),
                                     DATE_FORMAT.format(instance.getLaunchTime()), tags.toString() });
@@ -470,17 +471,26 @@ public class InstancesPanel extends javax.swing.JPanel implements AWSAware {
 
     private void btnLaunchActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnLaunchActionPerformed
         LaunchDialog dialog = new LaunchDialog(parentFrame, true);
-        dialog.setSize(600, 200);
-        dialog.setVisible(true);
-        if (LaunchDialog.RET_OK == dialog.getReturnStatus()) {
-            try {
-                awsConnectionProvider.launchInstance(dialog.getAMIID(), dialog.getSelectedInstanceType(),
-                        dialog.getSelectedInstanceCount());
-            } catch (Exception ex) {
-                Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to launch",
-                        JOptionPane.ERROR_MESSAGE);
+        try {
+            dialog.setKeyNames(awsConnectionProvider.getKeyPairNames());
+            dialog.setSecurityGroups(awsConnectionProvider.getSecurityGroups());
+            dialog.setSize(600, 600);
+            dialog.setVisible(true);
+            if (LaunchDialog.RET_OK == dialog.getReturnStatus()) {
+                try {
+                    awsConnectionProvider.launchInstance(dialog.getAMIID(), dialog.getSelectedInstanceType(),
+                            dialog.getSelectedInstanceCount(), dialog.getKeyName(), dialog.getSecurityGroups(),
+                            dialog.getTerminationViaAPI(), dialog.getTags());
+                } catch (Exception ex) {
+                    Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Failed to launch",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (Exception ex) {
+            Logger.getLogger(InstancesPanel.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane
+                    .showMessageDialog(this, ex.getLocalizedMessage(), "Failed to launch", JOptionPane.ERROR_MESSAGE);
         }
     }// GEN-LAST:event_btnLaunchActionPerformed
 
